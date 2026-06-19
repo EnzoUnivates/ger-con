@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Controle Financeiro</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .actions { margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+        form { background: #f9f9f9; padding: 15px; border: 1px solid #ccc; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <h2>Lançamentos Financeiros</h2>
+
+    <div class="actions">
+        <input type="date" id="filtroDataInicio">
+        <input type="date" id="filtroDataFim">
+        <select id="filtroSituacao">
+            <option value="">Todas as Situações</option>
+            <option value="PAGO">PAGO</option>
+            <option value="PENDENTE">PENDENTE</option>
+            <option value="CANCELADO">CANCELADO</option>
+        </select>
+        <button onclick="carregarLancamentos()">Filtrar</button>
+        <button onclick="window.open('http://localhost:3000/api/lancamentos/pdf')">Export to PDF</button>
+        <button onclick="enviarEmail()">Enviar por Email</button>
+    </div>
+
+    <form id="formLancamento" onsubmit="salvarLancamento(event)">
+        <h3>Novo Lançamento</h3>
+        <input type="text" id="desc" placeholder="Descrição" required>
+        <input type="date" id="data" required>
+        <input type="number" id="valor" step="0.01" placeholder="Valor R$" required>
+        <select id="tipo"><option value="RECEITA">RECEITA</option><option value="DESPESA">DESPESA</option></select>
+        <select id="sit"><option value="PENDENTE">PENDENTE</option><option value="PAGO">PAGO</option></select>
+        <button type="submit">Salvar</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr><th>ID</th><th>Descrição</th><th>Data</th><th>Valor</th><th>Tipo</th><th>Situação</th><th>Ações</th></tr>
+        </thead>
+        <tbody id="tabelaCorpo"></tbody>
+    </table>
+
+    <script>
+        const API = 'http://localhost:3000/api/lancamentos';
+
+        async function carregarLancamentos() {
+            const ini = document.getElementById('filtroDataInicio').value;
+            const fim = document.getElementById('filtroDataFim').value;
+            const sit = document.getElementById('filtroSituacao').value;
+            
+            let url = `${API}?situacao=${sit}`;
+            if(ini) url += `&dataInicio=${ini}`;
+            if(fim) url += `&dataFim=${fim}`;
+
+            const res = await fetch(url);
+            const dados = await res.json();
+            
+            const corpo = document.getElementById('tabelaCorpo');
+            corpo.innerHTML = dados.map(l => `
+                <tr>
+                    <td>${l.id}</td>
+                    <td>${l.descricao}</td>
+                    <td>${l.data_lancamento.split('T')[0]}</td>
+                    <td>R$ ${l.valor.toFixed(2)}</td>
+                    <td>${l.tipo_lancamento}</td>
+                    <td>${l.situacao}</td>
+                    <td><button onclick="deletarLancamento(${l.id})">Remover</button></td>
+                </tr>
+            `).join('');
+        }
+
+        async function salvarLancamento(e) {
+            e.preventDefault();
+            const body = {
+                descricao: document.getElementById('desc').value,
+                data_lancamento: document.getElementById('data').value,
+                valor: document.getElementById('valor').value,
+                tipo_lancamento: document.getElementById('tipo').value,
+                situacao: document.getElementById('sit').value
+            };
+            await fetch(API, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
+            document.getElementById('formLancamento').reset();
+            carregarLancamentos();
+        }
+
+        async function deletarLancamento(id) {
+            if(confirm('Deseja remover?')) {
+                await fetch(`${API}/${id}`, { method: 'DELETE' });
+                carregarLancamentos();
+            }
+        }
+
+        async function enviarEmail() {
+            const email = prompt("Digite o e-mail de destino:");
+            if(!email) return;
+            await fetch(`${API}/email`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ emailDestino: email }) });
+            alert('E-mail enviado para a fila com sucesso!');
+        }
+
+        carregarLancamentos();
+    </script>
+</body>
+</html>

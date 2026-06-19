@@ -1,0 +1,25 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Usuario {
+  id       Int    @id @default(autoincrement())
+  nome     String
+  login    String @unique
+  senha    String
+  situacao String // 'ATIVO', 'INATIVO'
+}
+
+model Lancamento {
+  id              Int      @id @default(autoincrement())
+  descricao       String
+  data_lancamento DateTime
+  valor           Float
+  tipo_lancamento String   // 'RECEITA', 'DESPESA'
+  situacao        String   // 'PAGO', 'PENDENTE', 'CANCELADO'
+}
