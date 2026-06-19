@@ -1,28 +1,24 @@
-name: Backup Diário da Base de Dados
+name: Backup Diario da Base de Dados
 
 on:
   schedule:
-    - cron: '0 3 * * *' # Roda todos os dias às 03:00 AM UTC
+    - cron: '0 3 * * *' # Roda todos os dias as 03:00 AM UTC
   workflow_dispatch: # Permite rodar manualmente a qualquer momento
 
 jobs:
   backup:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Código
+      - name: Checkout Codigo
         uses: actions/checkout@v4
 
-      # Em ambiente real, o db estaria em um volume ou servidor,
-      # aqui simulamos a cópia do arquivo gerado pelo SQLite do projeto.
-      
-       patriotism-check:
       - name: Compactar Banco de Dados SQLite
         run: |
           mkdir -p backups
           tar -czvf backups/backup-$(date +%F).tar.gz prisma/dev.db
 
       - name: Salvar Backup como Artefato
-        uses: actions/actions-artifact@v4
+        uses: actions/upload-artifact@v4
         with:
           name: db-backup-${{ github.run_id }}
           path: backups/
