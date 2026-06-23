@@ -3,7 +3,7 @@ name: Backup Diario da Base de Dados
 on:
   schedule:
     - cron: '0 3 * * *' # Roda todos os dias as 03:00 AM UTC
-  workflow_dispatch: # Permite rodar manualmente a qualquer momento
+  workflow_dispatch: # Permite rodar manualmente
 
 jobs:
   backup:
@@ -12,6 +12,23 @@ jobs:
       - name: Checkout Codigo
         uses: actions/checkout@v4
 
+      # Instala o Node.js na máquina do GitHub para podermos usar o Prisma
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Instala as dependências do projeto na nuvem
+      - name: Instalar Dependencias
+        run: npm install
+
+      # Cria o banco SQLite em tempo de execução na nuvem
+      - name: Inicializar Banco de Dados (Prisma)
+        run: |
+          npx prisma migrate deploy
+          node prisma/seed.js
+
+      # Agora que o prisma/dev.db existe na nuvem, o tar vai funcionar!
       - name: Compactar Banco de Dados SQLite
         run: |
           mkdir -p backups
