@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client';
 import PDFDocument from 'pdfkit';
 import nodemailer from 'nodemailer';
 
+// const erroPropositado = 123;
 const app = express();
 const prisma = new PrismaClient();
 app.use(cors());

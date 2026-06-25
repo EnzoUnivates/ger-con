@@ -1,110 +1,265 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Controle Financeiro</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .actions { margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
-        form { background: #f9f9f9; padding: 15px; border: 1px solid #ccc; margin-bottom: 20px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciador Financeiro Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
 
-    <h2>Lançamentos Financeiros</h2>
+  <div class="max-w-6xl mx-auto p-4 md:p-8">
+    
+    <header class="flex flex-col md:flex-row justify-between items-center mb-8 pb-6 border-b border-slate-800 gap-4">
+      <div class="flex items-center gap-3">
+        <div class="p-3 bg-indigo-600 rounded-xl text-white shadow-lg shadow-indigo-500/20">
+          <i data-lucide="wallet" class="w-8 h-8"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-white">Financeiro <span class="text-indigo-400">V2</span></h1>
+          <p class="text-sm text-slate-400">Controle de Fluxo de Caixa</p>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="gerarPDF()" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg text-sm font-medium transition border border-slate-700">
+          <i data-lucide="file-text" class="w-4 h-4"></i> Exportar PDF
+        </button>
+        <button onclick="enviarEmail()" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-lg shadow-indigo-600/20">
+          <i data-lucide="mail" class="w-4 h-4"></i> Notificar por E-mail
+        </button>
+      </div>
+    </header>
 
-    <div class="actions">
-        <input type="date" id="filtroDataInicio">
-        <input type="date" id="filtroDataFim">
-        <select id="filtroSituacao">
-            <option value="">Todas as Situações</option>
-            <option value="PAGO">PAGO</option>
-            <option value="PENDENTE">PENDENTE</option>
-            <option value="CANCELADO">CANCELADO</option>
-        </select>
-        <button onclick="carregarLancamentos()">Filtrar</button>
-        <button onclick="window.open('http://localhost:3000/api/lancamentos/pdf')">Export to PDF</button>
-        <button onclick="enviarEmail()">Enviar por Email</button>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700/50 flex items-center justify-between shadow-xl">
+        <div>
+          <p class="text-sm font-medium text-slate-400 mb-1">Total Entradas</p>
+          <h3 id="card-receitas" class="text-2xl font-bold text-emerald-400">R$ 0,00</h3>
+        </div>
+        <div class="p-3 bg-emerald-500/10 rounded-xl text-emerald-400"><i data-lucide="arrow-up-right" class="w-6 h-6"></i></div>
+      </div>
+      <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700/50 flex items-center justify-between shadow-xl">
+        <div>
+          <p class="text-sm font-medium text-slate-400 mb-1">Total Saídas</p>
+          <h3 id="card-despesas" class="text-2xl font-bold text-rose-400">R$ 0,00</h3>
+        </div>
+        <div class="p-3 bg-rose-500/10 rounded-xl text-rose-400"><i data-lucide="arrow-down-left" class="w-6 h-6"></i></div>
+      </div>
+      <div class="bg-slate-800 p-6 rounded-2xl border border-indigo-500/30 flex items-center justify-between shadow-xl bg-gradient-to-br from-slate-800 to-indigo-950/40">
+        <div>
+          <p class="text-sm font-medium text-slate-400 mb-1">Saldo Líquido</p>
+          <h3 id="card-saldo" class="text-2xl font-bold text-white">R$ 0,00</h3>
+        </div>
+        <div class="p-3 bg-indigo-500/10 rounded-xl text-indigo-400"><i data-lucide="scale" class="w-6 h-6"></i></div>
+      </div>
     </div>
 
-    <form id="formLancamento" onsubmit="salvarLancamento(event)">
-        <h3>Novo Lançamento</h3>
-        <input type="text" id="desc" placeholder="Descrição" required>
-        <input type="date" id="data" required>
-        <input type="number" id="valor" step="0.01" placeholder="Valor R$" required>
-        <select id="tipo"><option value="RECEITA">RECEITA</option><option value="DESPESA">DESPESA</option></select>
-        <select id="sit"><option value="PENDENTE">PENDENTE</option><option value="PAGO">PAGO</option></select>
-        <button type="submit">Salvar</button>
-    </form>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700/50 h-fit shadow-xl">
+        <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+          <i data-lucide="plus-circle" class="w-5 h-5 text-indigo-400"></i> Novo Lançamento
+        </h2>
+        <form id="form-lancamento" onsubmit="adicionarLancamento(event)" class="space-cols flex flex-col gap-4">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Descrição</label>
+            <input type="text" id="descricao" required placeholder="Ex: Aluguel, Mercado..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm transition">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Valor (R$)</label>
+            <input type="number" id="valor" step="0.01" required placeholder="0,00" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm transition">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Tipo</label>
+            <select id="tipo" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm transition">
+              <option value="RECEITA">📈 Receita (Entrada)</option>
+              <option value="DESPESA">📉 Despesa (Saída)</option>
+            </select>
+          </div>
+          <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-lg text-sm transition mt-2 shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2">
+            <i data-lucide="check" class="w-4 h-4"></i> Salvar Lançamento
+          </button>
+        </form>
+      </div>
 
-    <table>
-        <thead>
-            <tr><th>ID</th><th>Descrição</th><th>Data</th><th>Valor</th><th>Tipo</th><th>Situação</th><th>Ações</th></tr>
-        </thead>
-        <tbody id="tabelaCorpo"></tbody>
-    </table>
+      <div class="lg:col-span-2 bg-slate-800 rounded-2xl border border-slate-700/50 shadow-xl overflow-hidden flex flex-col">
+        <div class="p-4 bg-slate-800/80 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <i data-lucide="list" class="w-5 h-5 text-indigo-400"></i> Histórico
+          </h2>
+          <div class="flex items-center gap-2 bg-slate-900 p-1 rounded-lg border border-slate-700">
+            <button onclick="filtrar('TODOS')" id="btn-todos" class="px-3 py-1 text-xs font-medium rounded-md transition bg-indigo-600 text-white">Todos</button>
+            <button onclick="filtrar('RECEITA')" id="btn-receitas" class="px-3 py-1 text-xs font-medium rounded-md transition text-slate-400 hover:text-slate-200">Receitas</button>
+            <button onclick="filtrar('DESPESA')" id="btn-despesas" class="px-3 py-1 text-xs font-medium rounded-md transition text-slate-400 hover:text-slate-200">Despesas</button>
+          </div>
+        </div>
 
-    <script>
-        const API = 'http://localhost:3000/api/lancamentos';
+        <div class="overflow-x-auto flex-1">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-900/50 text-slate-400 text-xs font-semibold uppercase tracking-wider border-b border-slate-700">
+                <th class="py-3.5 px-6">Descrição</th>
+                <th class="py-3.5 px-6">Tipo</th>
+                <th class="py-3.5 px-6 text-right">Valor</th>
+                <th class="py-3.5 px-6 text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tabela-corpo" class="divide-y divide-slate-700/50 text-sm">
+              </tbody>
+          </table>
+        </div>
+      </div>
 
-        async function carregarLancamentos() {
-            const ini = document.getElementById('filtroDataInicio').value;
-            const fim = document.getElementById('filtroDataFim').value;
-            const sit = document.getElementById('filtroSituacao').value;
-            
-            let url = `${API}?situacao=${sit}`;
-            if(ini) url += `&dataInicio=${ini}`;
-            if(fim) url += `&dataFim=${fim}`;
+    </div>
+  </div>
 
-            const res = await fetch(url);
-            const dados = await res.json();
-            
-            const corpo = document.getElementById('tabelaCorpo');
-            corpo.innerHTML = dados.map(l => `
-                <tr>
-                    <td>${l.id}</td>
-                    <td>${l.descricao}</td>
-                    <td>${l.data_lancamento.split('T')[0]}</td>
-                    <td>R$ ${l.valor.toFixed(2)}</td>
-                    <td>${l.tipo_lancamento}</td>
-                    <td>${l.situacao}</td>
-                    <td><button onclick="deletarLancamento(${l.id})">Remover</button></td>
-                </tr>
-            `).join('');
-        }
+  <script>
+    const API_URL = 'http://localhost:3000/api/lancamentos';
+    let filtroAtual = 'TODOS';
 
-        async function salvarLancamento(e) {
-            e.preventDefault();
-            const body = {
-                descricao: document.getElementById('desc').value,
-                data_lancamento: document.getElementById('data').value,
-                valor: document.getElementById('valor').value,
-                tipo_lancamento: document.getElementById('tipo').value,
-                situacao: document.getElementById('sit').value
-            };
-            await fetch(API, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
-            document.getElementById('formLancamento').reset();
-            carregarLancamentos();
-        }
+    function atualizarIcones() {
+      lucide.createIcons();
+    }
 
-        async function deletarLancamento(id) {
-            if(confirm('Deseja remover?')) {
-                await fetch(`${API}/${id}`, { method: 'DELETE' });
-                carregarLancamentos();
-            }
-        }
+    async function carregarDados() {
+      try {
+        const response = await fetch(API_URL);
+        const lancamentos = await response.json();
+        
+        atualizarDashboard(lancamentos);
+        renderizarTabela(lancamentos);
+      } catch (error) {
+        console.error('Erro ao buscar dados:', error);
+      }
+    }
 
-        async function enviarEmail() {
-            const email = prompt("Digite o e-mail de destino:");
-            if(!email) return;
-            await fetch(`${API}/email`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ emailDestino: email }) });
-            alert('E-mail enviado para a fila com sucesso!');
-        }
+    function atualizarDashboard(dados) {
+      let receitas = 0;
+      let despesas = 0;
 
-        carregarLancamentos();
-    </script>
+      dados.forEach(l => {
+        if (l.tipo_lancamento === 'RECEITA') receitas += l.valor;
+        else despesas += l.valor;
+      });
+
+      const saldo = receitas - despesas;
+
+      document.getElementById('card-receitas').innerText = `R$ ${receitas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+      document.getElementById('card-despesas').innerText = `R$ ${despesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+      
+      const saldoElement = document.getElementById('card-saldo');
+      saldoElement.innerText = `R$ ${saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+      
+      if (saldo < 0) {
+        saldoElement.className = 'text-2xl font-bold text-rose-400';
+      } else {
+        saldoElement.className = 'text-2xl font-bold text-emerald-400';
+      }
+    }
+
+    function renderizarTabela(dados) {
+      const corpo = document.getElementById('tabela-corpo');
+      corpo.innerHTML = '';
+
+      const filtrados = dados.filter(l => filtroAtual === 'TODOS' || l.tipo_lancamento === filtroAtual);
+
+      if(filtrados.length === 0) {
+        corpo.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-slate-500">Nenhum lançamento encontrado.</td></tr>`;
+        return;
+      }
+
+      filtrados.forEach(l => {
+        const isReceita = l.tipo_lancamento === 'RECEITA';
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-slate-700/30 transition';
+        row.innerHTML = `
+          <td class="py-4 px-6 font-medium text-slate-200">${l.descricao}</td>
+          <td class="py-4 px-6">
+            <span class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${isReceita ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">
+              <span class="w-1.5 h-1.5 rounded-full ${isReceita ? 'bg-emerald-400' : 'bg-rose-400'}"></span>
+              ${isReceita ? 'Receita' : 'Despesa'}
+            </span>
+          </td>
+          <td class="py-4 px-6 text-right font-bold ${isReceita ? 'text-emerald-400' : 'text-rose-400'}">
+            ${isReceita ? '+' : '-'} R$ ${l.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+          </td>
+          <td class="py-4 px-6 text-center">
+            <button onclick="deletarLancamento(${l.id})" class="text-slate-500 hover:text-rose-400 p-1.5 rounded-lg hover:bg-rose-500/10 transition">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </td>
+        `;
+        corpo.appendChild(row);
+      });
+      atualizarIcones();
+    }
+
+    async function adicionarLancamento(e) {
+      e.preventDefault();
+      const descricao = document.getElementById('descricao').value;
+      const valor = parseFloat(document.getElementById('valor').value);
+      const tipo_lancamento = document.getElementById('tipo').value;
+
+      try {
+        await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ descricao, valor, tipo_lancamento, usuarioId: 1 })
+        });
+        document.getElementById('form-lancamento').reset();
+        carregarDados();
+      } catch (error) {
+        alert('Erro ao salvar lançamento');
+      }
+    }
+
+    async function deletarLancamento(id) {
+      if (!confirm('Deseja realmente excluir este lançamento?')) return;
+      try {
+        await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+        carregarDados();
+      } catch (error) {
+        alert('Erro ao excluir lançamento');
+      }
+    }
+
+    function filtrar(tipo) {
+      filtroAtual = tipo;
+      
+    
+      ['btn-todos', 'btn-receitas', 'btn-despesas'].forEach(id => {
+        document.getElementById(id).className = "px-3 py-1 text-xs font-medium rounded-md transition text-slate-400 hover:text-slate-200";
+      });
+
+      
+      const btnId = tipo === 'TODOS' ? 'btn-todos' : tipo === 'RECEITA' ? 'btn-receitas' : 'btn-despesas';
+      document.getElementById(btnId).className = "px-3 py-1 text-xs font-medium rounded-md transition bg-indigo-600 text-white";
+
+      carregarDados();
+    }
+
+    function gerarPDF() {
+      window.open(`${API_URL}/pdf`, '_blank');
+    }
+
+    async function enviarEmail() {
+      const email = prompt("Digite o e-mail de destino:");
+      if (!email) return;
+
+      try {
+        const res = await fetch(`${API_URL}/email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        if(res.ok) alert('E-mail disparado/simulado com sucesso!');
+      } catch (error) {
+        alert('Erro ao enviar e-mail');
+      }
+    }
+
+    carregarDados();
+  </script>
 </body>
 </html>
