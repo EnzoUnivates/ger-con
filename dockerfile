@@ -1,5 +1,8 @@
 FROM node:22-alpine
 
+# Instala as dependências nativas necessárias para o motor do Prisma rodar no Alpine Linux
+RUN apk add --no-cache libc6-compat openssl
+
 WORKDIR /app
 
 # Copia arquivos de configuração de dependências e do TypeScript
