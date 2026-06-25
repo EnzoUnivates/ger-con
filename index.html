@@ -77,6 +77,18 @@
               <option value="DESPESA">📉 Despesa (Saída)</option>
             </select>
           </div>
+          <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+                Data
+                </label>
+
+                <input
+                    type="date"
+                    id="data_lancamento"
+                    required
+                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
+                >
+                </div>
           <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-lg text-sm transition mt-2 shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2">
             <i data-lucide="check" class="w-4 h-4"></i> Salvar Lançamento
           </button>
@@ -196,23 +208,57 @@
     }
 
     async function adicionarLancamento(e) {
-      e.preventDefault();
-      const descricao = document.getElementById('descricao').value;
-      const valor = parseFloat(document.getElementById('valor').value);
-      const tipo_lancamento = document.getElementById('tipo').value;
+    e.preventDefault();
 
-      try {
-        await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ descricao, valor, tipo_lancamento, usuarioId: 1 })
+    const descricao =
+        document.getElementById('descricao').value;
+
+    const valor =
+        parseFloat(
+        document.getElementById('valor').value
+        );
+
+    const tipo_lancamento =
+        document.getElementById('tipo').value;
+
+    const data_lancamento =
+        document.getElementById('data_lancamento').value;
+
+    try {
+
+        const resposta = await fetch(API_URL, {
+        method: 'POST',
+
+        headers: {
+            'Content-Type': 'application/json'
+        },
+
+        body: JSON.stringify({
+            descricao,
+            valor,
+            tipo_lancamento,
+            data_lancamento,
+            situacao: "PENDENTE"
+        })
         });
-        document.getElementById('form-lancamento').reset();
+
+        if (!resposta.ok) {
+        const erro = await resposta.json();
+        throw new Error(erro.erro);
+        }
+
+        document
+        .getElementById('form-lancamento')
+        .reset();
+
         carregarDados();
-      } catch (error) {
-        alert('Erro ao salvar lançamento');
-      }
+
+    } catch (error) {
+        console.error(error);
+
+        alert("Erro ao salvar lançamento");
     }
+}
 
     async function deletarLancamento(id) {
       if (!confirm('Deseja realmente excluir este lançamento?')) return;
@@ -244,19 +290,31 @@
     }
 
     async function enviarEmail() {
-      const email = prompt("Digite o e-mail de destino:");
-      if (!email) return;
+    const email = prompt("Digite o e-mail:");
 
-      try {
+    if (!email) return;
+
+    try {
+
         const res = await fetch(`${API_URL}/email`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email })
+        method: 'POST',
+
+        headers: {
+            'Content-Type': 'application/json'
+        },
+
+        body: JSON.stringify({
+            emailDestino: email
+        })
         });
-        if(res.ok) alert('E-mail disparado/simulado com sucesso!');
-      } catch (error) {
-        alert('Erro ao enviar e-mail');
-      }
+
+        if (res.ok) {
+        alert("Email enviado");
+        }
+
+    } catch (error) {
+        alert("Erro ao enviar email");
+    }
     }
 
     carregarDados();
