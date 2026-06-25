@@ -7,12 +7,12 @@ services:
     container_name: finance-homologacao
     restart: always
     ports:
-      - "3001:3000" # Acessível na porta 3001 da sua VM
+      - "3001:3000"
     environment:
       - NODE_ENV=development
     volumes:
-      # Cria uma pasta persistente para o banco de homologação na VM
-      - ./data/homologacao:/app/prisma
+      # Mapeia diretamente o arquivo de banco individual, preservando a pasta do container!
+      - ./data/homologacao/dev.db:/app/prisma/dev.db
 
   # --- AMBIENTE DE PRODUÇÃO ---
   producao:
@@ -20,9 +20,9 @@ services:
     container_name: finance-producao
     restart: always
     ports:
-      - "3000:3000" # Acessível na porta 3000 da sua VM
+      - "3000:3000"
     environment:
       - NODE_ENV=production
     volumes:
-      # Cria uma pasta persistente para o banco de produção na VM
-      - ./data/producao:/app/prisma
+      # Mapeia diretamente o arquivo de banco individual
+      - ./data/producao/dev.db:/app/prisma/dev.db
