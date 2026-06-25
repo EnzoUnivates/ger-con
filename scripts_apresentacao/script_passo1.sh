@@ -11,4 +11,8 @@ echo "=== Rep ==="
 git clone https://github.com/EnzoUnivates/ger-con.git
 cd ger-con
 mkdir -p data/homologacao data/producao
+
+touch data/homologacao/dev.db
+touch data/producao/dev.db
+
 echo "Finalizado"
