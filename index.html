@@ -9,6 +9,29 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
 
+    <div id="tela-login" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0f172a; z-index: 9999; display: flex; align-items: center; justify-content: center; font-family: sans-serif;">
+      <div style="background: #1e293b; padding: 2.5rem; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); color: #f8fafc;">
+          <h2 id="login-titulo" style="margin-bottom: 1.5rem; text-align: center; font-size: 1.5rem; font-weight: 600;">Acessar o Sistema</h2>
+          
+          <div style="margin-bottom: 1rem;">
+              <label style="display: block; margin-bottom: 0.5rem; font-size: 0.875rem; color: #94a3b8;">Login (Usuário)</label>
+              <input type="text" id="login-usuario" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box;">
+          </div>
+
+          <div style="margin-bottom: 1.5rem;">
+              <label style="display: block; margin-bottom: 0.5rem; font-size: 0.875rem; color: #94a3b8;">Senha</label>
+              <input type="password" id="login-senha" style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box;">
+          </div>
+
+            <button id="btn-acao-login" onclick="executarAcaoLogin()" style="width: 100%; padding: 0.75rem; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; margin-bottom: 1rem;">Entrar</button>
+            
+            <p style="text-align: center; font-size: 0.875rem; color: #94a3b8; margin: 0;">
+                <span id="login-alternar-texto">Não tem uma conta?</span> 
+                <a href="#" onclick="alternarModoLogin(event)" id="login-link-alternar" style="color: #3b82f6; text-decoration: none; font-weight: 500;">Cadastre-se</a>
+            </p>
+        </div>
+    </div>
+
   <div class="max-w-6xl mx-auto p-4 md:p-8">
     
     <header class="flex flex-col md:flex-row justify-between items-center mb-8 pb-6 border-b border-slate-800 gap-4">
@@ -316,6 +339,76 @@
         alert("Erro ao enviar email");
     }
     }
+
+    let modoCadastro = false;
+
+function alternarModoLogin(e) {
+    e.preventDefault();
+    modoCadastro = !modoCadastro;
+    
+    const titulo = document.getElementById('login-titulo');
+    const btn = document.getElementById('btn-acao-login');
+    const textoAlternar = document.getElementById('login-alternar-texto');
+    const linkAlternar = document.getElementById('login-link-alternar');
+
+    if (modoCadastro) {
+        titulo.innerText = "Criar Nova Conta";
+        btn.innerText = "Cadastrar";
+        btn.style.background = "#10b981"; // Verde para cadastro
+        textoAlternar.innerText = "Já tem uma conta?";
+        linkAlternar.innerText = "Faça Login";
+    } else {
+        titulo.innerText = "Acessar o Sistema";
+        btn.innerText = "Entrar";
+        btn.style.background = "#2563eb"; // Azul para login
+        textoAlternar.innerText = "Não tem uma conta?";
+        linkAlternar.innerText = "Cadastre-se";
+    }
+}
+
+async function executarAcaoLogin() {
+    const login = document.getElementById('login-usuario').value;
+    const senha = document.getElementById('login-senha').value;
+
+    if (!login || !senha) {
+        alert('Por favor, preencha todos os campos.');
+        return;
+    }
+
+    // Se o backend usar rotas específicas, ajuste a URL relativa aqui (/api/login ou /api/usuarios)
+    const url = modoCadastro ? '/api/usuarios' : '/api/login'; 
+    
+    try {
+        // Mock temporário caso você queira testar o visual sem o backend pronto:
+        // Se quiser testar direto com o backend, remova as próximas 4 linhas!
+        if (login === "admin" && senha === "123") {
+            document.getElementById('tela-login').style.display = 'none';
+            return;
+        }
+
+        const resposta = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ login, senha, nome: login, situacao: 'ATIVO' }) // Envia os dados padrão do Prisma
+        });
+
+        if (resposta.ok) {
+            if (modoCadastro) {
+                alert('Cadastro realizado com sucesso! Faça o login.');
+                alternarModoLogin({ preventDefault: () => {} });
+            } else {
+                // Sucesso no login -> Esconde a tela de login e revela o sistema
+                document.getElementById('tela-login').style.display = 'none';
+                // Chame a sua função que carrega os lançamentos da dashboard aqui (ex: carregarLancamentos())
+            }
+        } else {
+            const erro = await resposta.json();
+            alert(erro.mensagem || 'Usuário ou senha inválidos.');
+        }
+    } catch (err) {
+        alert('Erro ao conectar com o servidor.');
+    }
+}
 
     carregarDados();
   </script>
