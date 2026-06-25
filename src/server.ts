@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client';
 import PDFDocument from 'pdfkit';
 import nodemailer from 'nodemailer';
 
+const erroFalha = 123;
 const app = express();
 const prisma = new PrismaClient();
 
@@ -12,9 +13,6 @@ app.use(express.json());
 app.use(express.static('./'));
 
 
-// ======================
-// LISTAR LANÇAMENTOS
-// ======================
 app.get('/api/lancamentos', async (req, res) => {
   try {
     const { dataInicio, dataFim, situacao } = req.query;
@@ -50,9 +48,6 @@ app.get('/api/lancamentos', async (req, res) => {
 });
 
 
-// ======================
-// ADICIONAR LANÇAMENTO
-// ======================
 app.post('/api/lancamentos', async (req, res) => {
   try {
     const {
@@ -101,9 +96,6 @@ app.post('/api/lancamentos', async (req, res) => {
 });
 
 
-// ======================
-// REMOVER
-// ======================
 app.delete('/api/lancamentos/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -126,9 +118,6 @@ app.delete('/api/lancamentos/:id', async (req, res) => {
 });
 
 
-// ======================
-// PDF
-// ======================
 app.get('/api/lancamentos/pdf', async (req, res) => {
   try {
     const lancamentos = await prisma.lancamento.findMany();
@@ -168,9 +157,6 @@ app.get('/api/lancamentos/pdf', async (req, res) => {
 });
 
 
-// ======================
-// EMAIL
-// ======================
 app.post('/api/lancamentos/email', async (req, res) => {
   try {
     const { emailDestino } = req.body;
