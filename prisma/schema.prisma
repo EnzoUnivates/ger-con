@@ -24,3 +24,7 @@ model Lancamento {
   situacao        String   // 'PAGO', 'PENDENTE', 'CANCELADO'
 }
 
+model CategoriaExtra {
+  id   Int    @id @default(autoincrement())
+  nome String
+}
