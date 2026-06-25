@@ -205,6 +205,99 @@ app.post('/api/lancamentos/email', async (req, res) => {
   }
 });
 
+app.post('/api/usuarios', async (req, res) => {
+  try {
+    const { login, senha, nome, situacao } = req.body;
+
+    if (!login || !senha) {
+      return res.status(400).json({
+        mensagem: "Login e senha obrigatórios"
+      });
+    }
+
+    // verifica se usuário já existe
+    const existente = await prisma.usuario.findUnique({
+      where: { login }
+    });
+
+    if (existente) {
+      return res.status(400).json({
+        mensagem: "Usuário já existe"
+      });
+    }
+
+    const usuario = await prisma.usuario.create({
+      data: {
+        login,
+        senha,
+        nome: nome || login,
+        situacao: situacao || "ATIVO"
+      }
+    });
+
+    res.status(201).json({
+      mensagem: "Usuário criado com sucesso",
+      usuario
+    });
+
+  } catch (error: any) {
+    console.error("Erro cadastro:", error);
+
+    res.status(500).json({
+      mensagem: error.message
+    });
+  }
+});
+
+app.post('/api/login', async (req, res) => {
+  try {
+    const { login, senha } = req.body;
+
+    if (!login || !senha) {
+      return res.status(400).json({
+        mensagem: "Login e senha obrigatórios"
+      });
+    }
+
+    const usuario = await prisma.usuario.findUnique({
+      where: { login }
+    });
+
+    if (!usuario) {
+      return res.status(401).json({
+        mensagem: "Usuário não encontrado"
+      });
+    }
+
+    if (usuario.senha !== senha) {
+      return res.status(401).json({
+        mensagem: "Senha incorreta"
+      });
+    }
+
+    if (usuario.situacao !== "ATIVO") {
+      return res.status(403).json({
+        mensagem: "Usuário inativo"
+      });
+    }
+
+    res.json({
+      mensagem: "Login realizado com sucesso",
+      usuario: {
+        id: usuario.id,
+        login: usuario.login,
+        nome: usuario.nome
+      }
+    });
+
+  } catch (error: any) {
+    console.error("Erro login:", error);
+
+    res.status(500).json({
+      mensagem: error.message
+    });
+  }
+});
 
 app.listen(3000, () => {
   console.log("Server running on http://localhost:3000");
