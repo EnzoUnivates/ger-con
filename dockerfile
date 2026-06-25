@@ -2,8 +2,9 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-# Copia arquivos de configuração de dependências
+# Copia arquivos de configuração de dependências e do TypeScript
 COPY package*.json ./
+COPY tsconfig.json ./
 COPY prisma ./prisma/
 
 # Instala todas as dependências e gera o Prisma Client
