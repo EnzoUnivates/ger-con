@@ -4,6 +4,7 @@ services:
   # --- AMBIENTE DE HOMOLOGAÇÃO ---
   homologacao:
     build: .
+    image: ger-con-homologacao:latest
     container_name: finance-homologacao
     restart: always
     ports:
@@ -17,6 +18,7 @@ services:
   # --- AMBIENTE DE PRODUÇÃO ---
   producao:
     build: .
+    image: ger-con-producao:latest
     container_name: finance-producao
     restart: always
     ports:
