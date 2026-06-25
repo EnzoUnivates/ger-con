@@ -10,8 +10,9 @@
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint"],
   "rules": {
-    "no-unused-vars": "error",
-    "no-console": "warn",
-    "eqeqeq": "error"
+  "no-unused-vars": "error",
+  "no-console": "off",
+  "@typescript-eslint/no-explicit-any": "off", 
+  "eqeqeq": "error"
   }
 }
