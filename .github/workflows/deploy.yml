@@ -1,0 +1,33 @@
+name: CI/CD Deploy Homolog
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout do Código
+      uses: actions/checkout@v4
+
+    - name: Instalar Node.js e rodar Linter
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
+    - name: Rodar Linter / Mess Detector
+      run: |
+        npm install
+        npm run lint
+
+    - name: Conectar via SSH e Executar Script na VM
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VM_HOST }}
+        username: ${{ secrets.VM_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          # Entra na pasta e roda o seu script de homologação atualizado
+          ./update_homolog.sh
