@@ -29,5 +29,8 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
         script: |
+         echo "conectou"
+         whoami
+         pwd
           # Entra na pasta e roda o seu script de homologação atualizado
           ./update_homolog.sh
